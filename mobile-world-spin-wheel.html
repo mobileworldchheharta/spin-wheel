@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Mobile World — Wheel Of Fortune</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800;900&family=Hind:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange-dark:#e65100;
+    --orange:#ff6d00;
+    --orange-mid:#ff8f00;
+    --gold:#ffb300;
+    --gold-light:#ffd54f;
+    --brown:#4e2600;
+    --white:#fff;
+    --card:#fff8e6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Hind","Poppins",system-ui,sans-serif;
+    color:var(--brown);
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(255,213,79,.75), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 90% 10%, rgba(255,255,255,.22), transparent 55%),
+      radial-gradient(ellipse 1000px 700px at 50% 110%, rgba(183,28,28,.28), transparent 60%),
+      linear-gradient(165deg,#ff8a00 0%,#ff6d00 38%,#f4511e 72%,#e65100 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* decorative soft circles like the reference photo */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;
+    background:
+      radial-gradient(circle at 88% 22%, transparent 118px, rgba(255,255,255,.9) 119px, transparent 121px),
+      radial-gradient(circle at 88% 22%, transparent 175px, rgba(255,255,255,.8) 176px, transparent 178px),
+      radial-gradient(circle at 6% 78%, transparent 140px, rgba(255,255,255,.8) 141px, transparent 143px),
+      radial-gradient(circle at 6% 78%, transparent 205px, rgba(255,255,255,.7) 206px, transparent 208px);
+  }
+  button,[role="button"],a.btn,input{min-height:44px}
+  .wrap{max-width:680px;margin:0 auto;padding:22px 16px 34px;position:relative;z-index:1}
+
+  /* ---------- Branding ---------- */
+  .brand-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .brand{
+    font-family:"Poppins",sans-serif;font-weight:900;letter-spacing:.5px;
+    color:#fff;font-size:clamp(28px,7.2vw,52px);line-height:.95;
+    text-shadow:0 3px 0 rgba(120,40,0,.35),0 10px 28px rgba(120,40,0,.35);
+    text-transform:uppercase;
+  }
+  .brand span{display:block}
+  .brand-badge{
+    flex:0 0 auto;background:#fff;color:#e65100;font-family:"Poppins",sans-serif;font-weight:800;
+    font-size:12px;letter-spacing:.6px;padding:8px 12px;border-radius:999px;margin-top:6px;
+    box-shadow:0 6px 18px rgba(90,30,0,.28);text-align:center;line-height:1.25;
+  }
+  .shop-line{color:#fff7e0;font-weight:700;letter-spacing:2.2px;font-size:12.5px;margin-top:8px;text-transform:uppercase}
+  h1.wheel-title{
+    font-family:"Poppins",sans-serif;font-weight:800;color:#fff;text-align:center;
+    font-size:clamp(30px,8vw,46px);margin:20px 0 4px;letter-spacing:.2px;
+    text-shadow:0 3px 0 rgba(120,40,0,.30),0 10px 24px rgba(120,40,0,.30);
+  }
+  .tagline{text-align:center;color:#fffde7;font-family:"Poppins",sans-serif;font-weight:800;font-size:clamp(19px,5vw,24px);letter-spacing:.4px;margin:2px 0 6px;text-shadow:0 2px 8px rgba(90,30,0,.35)}
+
+  /* ---------- Wheel ---------- */
+  .wheel-stage{position:relative;width:min(88vw,500px);margin:26px auto 0;aspect-ratio:1/1}
+  .pointer{
+    position:absolute;left:50%;top:-14px;transform:translateX(-50%);z-index:6;
+    width:54px;height:64px;filter:drop-shadow(0 6px 8px rgba(80,25,0,.45));
+  }
+  .wheel-outer{
+    position:absolute;inset:0;border-radius:50%;
+    background:linear-gradient(145deg,#1e5eff,#0d2f8a 55%,#123a9e);
+    box-shadow:0 24px 50px rgba(70,20,0,.45), inset 0 0 0 4px rgba(255,255,255,.25), inset 0 -10px 24px rgba(0,0,0,.35);
+  }
+  .bulb{position:absolute;width:13px;height:13px;border-radius:50%;background:#bfe3ff;box-shadow:0 0 8px 2px rgba(160,210,255,.65);transform:translate(-50%,-50%)}
+  .bulb.on{background:#fff8b5;box-shadow:0 0 12px 4px rgba(255,235,130,.95)}
+  .wheel{
+    position:absolute;inset:22px;border-radius:50%;overflow:hidden;
+    box-shadow:inset 0 0 0 3px rgba(255,255,255,.85), inset 0 0 34px rgba(0,0,0,.28);
+    transition:transform 5.2s cubic-bezier(.12,.72,.06,1);
+    will-change:transform;
+  }
+  .wheel svg{display:block;width:100%;height:100%}
+  .seg-label{
+    position:absolute;left:50%;top:50%;width:104px;margin-left:-52px;margin-top:-24px;
+    text-align:center;color:#fff;font-family:"Poppins",sans-serif;font-weight:700;
+    font-size:clamp(11.5px,3vw,15px);line-height:1.2;letter-spacing:.2px;
+    text-shadow:0 1.5px 3px rgba(0,0,0,.45);pointer-events:none;
+    overflow-wrap:break-word;
+  }
+  .hub{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
+    width:104px;height:104px;border-radius:50%;border:4px solid #ffe082;cursor:pointer;
+    background:radial-gradient(circle at 35% 30%,#ffecb3,#ffb300 55%,#e65100 130%);
+    color:#4e2600;font-family:"Poppins",sans-serif;font-weight:900;font-size:19px;letter-spacing:.6px;
+    box-shadow:0 10px 24px rgba(70,20,0,.5), inset 0 2px 6px rgba(255,255,255,.8);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.05;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .hub small{font-size:10.5px;font-weight:800;letter-spacing:1.4px}
+  .hub:active{transform:translate(-50%,-50%) scale(.96)}
+  .hub:disabled{cursor:wait;filter:saturate(.75)}
+
+  .spin-btn{
+    display:block;margin:22px auto 0;border:0;cursor:pointer;
+    font-family:"Poppins",sans-serif;font-weight:900;font-size:21px;letter-spacing:1px;
+    color:#4e2600;background:linear-gradient(180deg,#fff59d,#ffd54f 55%,#ffb300);
+    padding:14px 44px;border-radius:999px;
+    box-shadow:0 12px 26px rgba(80,25,0,.42), inset 0 2px 0 #fff;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .spin-btn:active{transform:scale(.97)}
+  .spin-btn:disabled{opacity:.65;cursor:wait}
+
+  /* ---------- Result ---------- */
+  .result{
+    display:none;margin:18px auto 0;max-width:520px;background:var(--card);
+    border:2.5px dashed #e65100;border-radius:18px;padding:16px 18px;text-align:center;
+    box-shadow:0 14px 30px rgba(80,25,0,.30);
+  }
+  .result.show{display:block;animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .result .r-kicker{font-size:13px;font-weight:800;letter-spacing:1.6px;color:#e65100;text-transform:uppercase}
+  .result .r-prize{font-family:"Poppins",sans-serif;font-weight:900;font-size:clamp(24px,6vw,34px);color:#bf360c;margin:4px 0 2px;line-height:1.15}
+  .result .r-sub{font-size:15px;color:#6d3b00;font-weight:600;margin:0}
+  @media (prefers-reduced-motion:reduce){.result.show{animation:none}.wheel{transition-duration:.6s}}
+
+  /* ---------- Social ---------- */
+  .social{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:520px;margin:26px auto 0}
+  @media (max-width:420px){.social{grid-template-columns:1fr}}
+  a.btn{
+    display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;
+    font-family:"Poppins",sans-serif;font-weight:800;font-size:16px;color:#fff;
+    padding:13px 14px;border-radius:16px;box-shadow:0 10px 22px rgba(80,25,0,.35);
+  }
+  a.btn svg{width:24px;height:24px;flex:0 0 auto}
+  a.btn small{display:block;font-family:"Hind",sans-serif;font-weight:600;font-size:12.5px;opacity:.92}
+  .btn-insta{background:linear-gradient(45deg,#f09433,#e6683c 30%,#dc2743 55%,#cc2366 78%,#bc1888)}
+  .btn-wa{background:linear-gradient(180deg,#2be07a,#1eb85a 60%,#128c4b)}
+  a.btn:active{transform:scale(.98)}
+  .hashtag{
+    text-align:center;margin:24px 0 0;color:#fff;font-family:"Poppins",sans-serif;font-weight:800;
+    font-size:clamp(17px,4.6vw,22px);letter-spacing:.3px;text-shadow:0 2px 10px rgba(90,30,0,.4);
+  }
+  .shop-meta{text-align:center;color:#ffe9c4;font-size:14px;font-weight:600;margin:6px 0 0}
+
+  /* ---------- Settings + PIN ---------- */
+  .settings,.pin-gate{
+    display:none;max-width:560px;margin:14px auto 0;background:#fffdf4;border-radius:20px;
+    padding:20px 18px 18px;box-shadow:0 16px 34px rgba(80,25,0,.35);text-align:left;
+  }
+  .settings.open,.pin-gate.open{display:block}
+  .settings h2,.pin-gate h2{font-family:"Poppins",sans-serif;font-size:19px;margin:0 0 4px;color:#bf360c}
+  .settings p,.pin-gate p{margin:0 0 14px;font-size:14.5px;color:#6d4c1f;line-height:1.45}
+  .field{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .dot{flex:0 0 auto;width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 1px 3px rgba(0,0,0,.3)}
+  .field label{flex:0 0 58px;font-weight:700;font-size:14px;color:#5d3500}
+  .field input{
+    flex:1;min-width:0;border:1.5px solid #e0c08a;border-radius:10px;padding:10px 12px;
+    font-family:"Hind",sans-serif;font-size:16px;font-weight:600;color:#3e2723;background:#fff;
+  }
+  .field input:focus{outline:2.5px solid #ff8f00;outline-offset:1px;border-color:#ff8f00}
+  .settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .apply-btn{
+    flex:1;border:0;cursor:pointer;border-radius:12px;padding:12px 18px;
+    background:linear-gradient(180deg,#ff8f00,#e65100);color:#fff;
+    font-family:"Poppins",sans-serif;font-weight:800;font-size:16px;box-shadow:0 8px 18px rgba(180,70,0,.35);
+  }
+  .reset-btn{
+    border:1.5px solid #c98a2d;background:#fff;color:#8d5a00;border-radius:12px;padding:12px 16px;cursor:pointer;
+    font-family:"Poppins",sans-serif;font-weight:700;font-size:14.5px;
+  }
+  .saved-note{display:none;margin-top:10px;font-weight:700;color:#2e7d32;font-size:14.5px}
+  .saved-note.show{display:block}
+
+  .pin-view{display:none}
+  .pin-view.show{display:block}
+  .pin-label{display:block;font-weight:700;font-size:14px;color:#5d3500;margin:0 0 6px}
+  .pin-input{
+    width:100%;border:1.5px solid #e0c08a;border-radius:10px;padding:10px 12px;margin-bottom:10px;
+    font-family:"Poppins",sans-serif;font-size:24px;font-weight:800;letter-spacing:10px;text-align:center;
+    color:#3e2723;background:#fff;
+  }
+  .pin-input:focus{outline:2.5px solid #ff8f00;outline-offset:1px;border-color:#ff8f00}
+  .pin-submit{
+    width:100%;border:0;cursor:pointer;border-radius:12px;padding:12px 18px;
+    background:linear-gradient(180deg,#ff8f00,#e65100);color:#fff;
+    font-family:"Poppins",sans-serif;font-weight:800;font-size:16px;box-shadow:0 8px 18px rgba(180,70,0,.35);
+  }
+  .pin-error{display:none;margin:8px 0 0;font-weight:700;color:#b71c1c;font-size:14.5px}
+  .pin-error.show{display:block}
+  .pin-ok{display:none;margin:8px 0 0;font-weight:700;color:#2e7d32;font-size:14.5px}
+  .pin-ok.show{display:block}
+  .change-pin{border-top:1.5px dashed #e0c08a;margin-top:18px;padding-top:14px}
+  .change-pin h3{font-family:"Poppins",sans-serif;font-size:16px;margin:0 0 4px;color:#bf360c}
+  .change-pin .pin-input{font-size:20px;letter-spacing:8px}
+  .change-pin-btn{
+    width:100%;border:1.5px solid #c98a2d;background:#fff;color:#8d5a00;border-radius:12px;padding:11px 16px;cursor:pointer;
+    font-family:"Poppins",sans-serif;font-weight:700;font-size:15px;
+  }
+
+  .confetti{position:fixed;top:-16px;z-index:50;pointer-events:none;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Branding — photo wali style -->
+  <div class="brand-row">
+    <div class="brand" id="brandTap" style="-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none"><span>Mobile</span><span>World</span></div>
+    <div class="brand-badge">SPIN &amp;<br>WIN 🎁</div>
+  </div>
+  <div class="shop-line">Pratap Bazaar • Chheharta • Amritsar</div>
+
+  <h1 class="wheel-title">Wheel Of Fortune</h1>
+  <p class="tagline">Gift Jeeto</p>
+
+  <!-- Wheel -->
+  <div class="wheel-stage" aria-label="Spin wheel">
+    <svg class="pointer" viewBox="0 0 54 64" aria-hidden="true">
+      <path d="M27 62 L8 22 Q8 4 27 4 Q46 4 46 22 Z" fill="#ffd54f" stroke="#b26a00" stroke-width="2.5"/>
+      <circle cx="27" cy="21" r="8" fill="#e65100"/>
+      <circle cx="27" cy="21" r="3.5" fill="#fff8e1"/>
+    </svg>
+    <div class="wheel-outer" id="wheelOuter">
+      <div class="wheel" id="wheel"></div>
+      <button class="hub" id="hubBtn" type="button" aria-label="Spin the wheel"><small>TAP TO</small>SPIN</button>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn" type="button">🎡 &nbsp;SPIN KARO</button>
+
+  <!-- Result -->
+  <div class="result" id="resultBox" role="status" aria-live="polite">
+    <div class="r-kicker" id="resultKicker">🎉 Mubarak Ho! Aap Jeete Hain</div>
+    <div class="r-prize" id="resultPrize"></div>
+    <p class="r-sub" id="resultSub">Apna gift counter par dikha kar le lo. Dhanyavaad, Mobile World me aane ke liye!</p>
+  </div>
+
+  <!-- Social links -->
+  <div class="social">
+    <a class="btn btn-insta" href="https://www.instagram.com/mobileworldchheharta/" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4.4" stroke="#fff" stroke-width="2"/><circle cx="17.6" cy="6.4" r="1.5" fill="#fff"/></svg>
+      <span>Follow Karo<small>@mobileworldchheharta</small></span>
+    </a>
+    <a class="btn btn-wa" href="https://wa.me/919592717735" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.9-1.2-4.7-4.1-4.9-4.3-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2c.1.1.1.3 0 .5-.3.6-.6.8-.4 1.1.7 1.2 1.6 2 2.8 2.6.3.2.5.1.7-.1l.9-1c.2-.3.4-.2.7-.1l2 .9c.3.2.5.3.6.4 0 .1 0 .7-.2 1.2z"/></svg>
+      <span>WhatsApp Par Baat Karo<small>+91 95927 17735</small></span>
+    </a>
+  </div>
+
+  <p class="hashtag">#MobileWorldWheelOfFortune</p>
+  <p class="shop-meta">Mobile World • Roz 11 AM – 9 PM • 📞 95927 17735</p>
+
+  <!-- Owner settings: page par koi button nahi — "MOBILE WORLD" naam par 5 baar tap karne par PIN khana khulta hai -->
+
+  <!-- PIN gate: pehli baar PIN banao, uske baad PIN daal kar hi settings khulegi -->
+  <section class="pin-gate" id="pinGate" aria-label="Owner PIN">
+    <form class="pin-view" id="pinSetupView" autocomplete="off">
+      <h2>🔐 Apna Owner PIN Banao</h2>
+      <p>Ye pehli baar hai — apna <b>4-digit PIN</b> banao. Iske baad settings sirf isi PIN se khulegi, customer kuch change nahi kar payega. PIN isi phone/browser me save rahega.</p>
+      <label class="pin-label" for="setupPin1">Naya 4-digit PIN</label>
+      <input class="pin-input" id="setupPin1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" aria-label="Naya 4 digit PIN" />
+      <label class="pin-label" for="setupPin2">PIN dobara daalo (confirm)</label>
+      <input class="pin-input" id="setupPin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" aria-label="PIN dobara daalo" />
+      <button class="pin-submit" type="submit">PIN Set Karo — Settings Kholo</button>
+      <p class="pin-error" id="setupError" role="alert"></p>
+    </form>
+    <form class="pin-view" id="pinEntryView" autocomplete="off">
+      <h2>🔐 Owner PIN Daalo</h2>
+      <p>Settings sirf owner ke liye hai. Apna <b>4-digit PIN</b> daalo — bina sahi PIN ke gift ke naam nahi badle ja sakte.</p>
+      <label class="pin-label" for="entryPin">4-digit PIN</label>
+      <input class="pin-input" id="entryPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="Owner PIN daalo" />
+      <button class="pin-submit" type="submit">Settings Kholo</button>
+      <p class="pin-error" id="entryError" role="alert"></p>
+    </form>
+    <button class="reset-btn" type="button" data-close-owner style="width:100%;margin-top:12px">✖ Band Karo</button>
+  </section>
+
+  <section class="settings" id="settingsPanel" aria-label="Gift settings">
+    <h2>🎁 Gift Ke Naam Badlo</h2>
+    <p>Wheel par abhi ye <b>7 options</b> lage hain. Naam badal kar <b>Save Karo</b> dabao — wheel par naye naam turant aa jayenge aur <b>isi phone/browser me save ho jayenge</b>, taaki page band karke dobara kholne par bhi wahi naam bane rahein, har baar dobara na bharne padein.</p>
+    <div id="fields"></div>
+    <div class="settings-actions">
+      <button class="apply-btn" id="applyBtn" type="button">✅ Save Karo — Wheel Update Karo</button>
+      <button class="reset-btn" id="resetBtn" type="button">Default Naam Wapas</button>
+    </div>
+    <p class="saved-note" id="savedNote">✔ Ho gaya! Naye naam wheel par lag gaye aur is phone me save ho gaye hain.</p>
+
+    <form class="change-pin" id="changePinForm" autocomplete="off">
+      <h3>🔑 PIN Badlo</h3>
+      <p>Chaaho to apna owner PIN yahan se badal sakte ho. Naya PIN bhi isi phone/browser me save rahega.</p>
+      <label class="pin-label" for="curPin">Abhi wala PIN</label>
+      <input class="pin-input" id="curPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="Abhi wala PIN" />
+      <label class="pin-label" for="newPin">Naya 4-digit PIN</label>
+      <input class="pin-input" id="newPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" aria-label="Naya 4 digit PIN" />
+      <label class="pin-label" for="newPin2">Naya PIN dobara daalo</label>
+      <input class="pin-input" id="newPin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" aria-label="Naya PIN dobara daalo" />
+      <button class="change-pin-btn" type="submit">PIN Badal Do</button>
+      <p class="pin-error" id="changeError" role="alert"></p>
+      <p class="pin-ok" id="changeOk">✔ PIN badal gaya hai — agli baar settings naye PIN se khulegi.</p>
+    </form>
+    <button class="reset-btn" type="button" data-close-owner style="width:100%;margin-top:14px">✖ Settings Band Karo</button>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SEG = 7;
+  var SEG_ANGLE = 360 / SEG;
+  var COLORS = ["#1e40af","#ea580c","#047857","#b91c1c","#0e7490","#b45309","#334155"];
+  var DEFAULTS = [
+    "Free Tempered Glass",
+    "Airpods",
+    "Earphones",
+    "Neckband",
+    "Speaker",
+    "₹100 Discount Coupon",
+    "Better Luck Next Time"
+  ];
+
+  /* ---- Storage (localStorage, with in-memory fallback) ---- */
+  var LS_GIFTS = "mw_wheel_gifts_v2";
+  var LS_PIN = "mw_wheel_pin";
+  var memStore = {};
+  function lsGet(k){
+    try { var v = window.localStorage.getItem(k); if(v !== null) return v; } catch(e){}
+    return (k in memStore) ? memStore[k] : null;
+  }
+  function lsSet(k, v){
+    memStore[k] = v;
+    try { window.localStorage.setItem(k, v); } catch(e){}
+  }
+  function loadGifts(){
+    var raw = lsGet(LS_GIFTS);
+    if(raw){
+      try {
+        var arr = JSON.parse(raw);
+        if(arr && arr.length === SEG){
+          var ok = true, out = [];
+          for(var i=0;i<SEG;i++){
+            if(typeof arr[i] !== "string" || !arr[i].trim()){ ok = false; break; }
+            out.push(arr[i]);
+          }
+          if(ok) return out;
+        }
+      } catch(e){}
+    }
+    return DEFAULTS.slice();
+  }
+  function saveGifts(){ lsSet(LS_GIFTS, JSON.stringify(gifts)); }
+  function getPin(){
+    var p = lsGet(LS_PIN);
+    return (p && /^\d{4}$/.test(p)) ? p : null;
+  }
+
+  var gifts = loadGifts();
+  var wheel = document.getElementById("wheel");
+  var outer = document.getElementById("wheelOuter");
+  var spinBtn = document.getElementById("spinBtn");
+  var hubBtn = document.getElementById("hubBtn");
+  var resultBox = document.getElementById("resultBox");
+  var resultPrize = document.getElementById("resultPrize");
+  var resultKicker = document.getElementById("resultKicker");
+  var resultSub = document.getElementById("resultSub");
+  var spinning = false;
+  var rotation = 0;
+
+  /* ---- LED bulbs around the ring (like the reference photo) ---- */
+  var bulbs = [];
+  (function makeBulbs(){
+    var N = 18;
+    for(var i=0;i<N;i++){
+      var b = document.createElement("div");
+      b.className = "bulb";
+      var a = (i/N)*Math.PI*2;
+      b.style.left = (50 + 47.8*Math.cos(a)) + "%";
+      b.style.top  = (50 + 47.8*Math.sin(a)) + "%";
+      outer.appendChild(b);
+      bulbs.push(b);
+    }
+    var flip = false;
+    setInterval(function(){
+      flip = !flip;
+      for(var i=0;i<bulbs.length;i++){
+        bulbs[i].classList.toggle("on", (i%2===0) === flip);
+      }
+    }, 550);
+  })();
+
+  /* ---- Build wheel segments + labels ---- */
+  var labelEls = [];
+  function deg(n){ return Math.round(n*1000)/1000; }
+  function buildWheel(){
+    var stops = [];
+    for(var i=0;i<SEG;i++){
+      stops.push(COLORS[i] + " " + deg(i*SEG_ANGLE) + "deg " + deg((i+1)*SEG_ANGLE) + "deg");
+    }
+    wheel.style.background = "conic-gradient(from " + deg(-SEG_ANGLE/2) + "deg, " + stops.join(",") + ")";
+    wheel.innerHTML = "";
+    labelEls = [];
+    for(var j=0;j<SEG;j++){
+      var lab = document.createElement("div");
+      lab.className = "seg-label";
+      lab.textContent = gifts[j];
+      lab.style.transform = "rotate(" + deg(j*SEG_ANGLE) + "deg) translateY(-" + labelRadius() + "px)";
+      lab.style.transformOrigin = "center center";
+      wheel.appendChild(lab);
+      labelEls.push(lab);
+    }
+  }
+  function labelRadius(){
+    var w = wheel.clientWidth || 320;
+    return Math.round(w * 0.335);
+  }
+  window.addEventListener("resize", function(){
+    for(var i=0;i<labelEls.length;i++){
+      labelEls[i].style.transform = "rotate(" + deg(i*SEG_ANGLE) + "deg) translateY(-" + labelRadius() + "px)";
+    }
+  });
+
+  /* ---- Har spin bilkul random: 7 options me se koi bhi aa sakta hai, dobara bhi ---- */
+  function nextIndex(){
+    return Math.floor(Math.random()*SEG);
+  }
+
+  /* ---- Confetti ---- */
+  function confetti(){
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var colors = ["#ff6d00","#ffd54f","#1e40af","#047857","#e91e63","#fff"];
+    for(var i=0;i<70;i++){
+      var c = document.createElement("div");
+      c.className = "confetti";
+      var s = 6 + Math.random()*7;
+      c.style.width = s + "px";
+      c.style.height = (s*0.55) + "px";
+      c.style.left = (Math.random()*100) + "vw";
+      c.style.background = colors[i % colors.length];
+      document.body.appendChild(c);
+      var dx = (Math.random()*160 - 80);
+      var dur = 2200 + Math.random()*1600;
+      c.animate([
+        { transform:"translate(0,0) rotate(0deg)", opacity:1 },
+        { transform:"translate(" + dx + "px, 105vh) rotate(" + (Math.random()*720-360) + "deg)", opacity:.9 }
+      ], { duration: dur, easing:"cubic-bezier(.2,.7,.4,1)" });
+      (function(el, d){ setTimeout(function(){ el.remove(); }, d+100); })(c, dur);
+    }
+  }
+
+  /* ---- Spin ---- */
+  function spin(){
+    if(spinning) return;
+    spinning = true;
+    spinBtn.disabled = true;
+    hubBtn.disabled = true;
+    resultBox.classList.remove("show");
+    var idx = nextIndex();
+    var jitter = Math.floor(Math.random()*28) - 14; /* stays safely inside the segment */
+    var currentTurn = Math.ceil(rotation/360)*360;
+    var target = currentTurn + 360*5 - idx*SEG_ANGLE + jitter;
+    if(target <= rotation + 360*4) target += 360;
+    rotation = target;
+    wheel.style.transform = "rotate(" + rotation + "deg)";
+    setTimeout(function(){
+      spinning = false;
+      spinBtn.disabled = false;
+      hubBtn.disabled = false;
+      var prize = gifts[idx];
+      var noPrize = /no prize|better luck|try again|kuch nahi/i.test(prize);
+      resultKicker.textContent = noPrize ? "😊 Koi Baat Nahi!" : "🎉 Mubarak Ho! Aap Jeete Hain";
+      resultPrize.textContent = prize;
+      resultSub.textContent = noPrize
+        ? "Koi baat nahi! Agli baar pakka jeetoge. Mobile World me aane ke liye dhanyavaad!"
+        : "Apna gift counter par ye result dikha kar le lo. Dhanyavaad, Mobile World me aane ke liye!";
+      resultBox.classList.add("show");
+      if(!noPrize) confetti();
+      resultBox.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    }, 5450);
+  }
+  spinBtn.addEventListener("click", spin);
+  hubBtn.addEventListener("click", spin);
+
+  /* ---- Settings fields ---- */
+  var fieldsWrap = document.getElementById("fields");
+  var inputs = [];
+  function buildFields(){
+    fieldsWrap.innerHTML = "";
+    inputs = [];
+    for(var i=0;i<SEG;i++){
+      var row = document.createElement("div");
+      row.className = "field";
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = COLORS[i];
+      var lab = document.createElement("label");
+      lab.textContent = "Gift " + (i+1);
+      lab.setAttribute("for", "gift-" + i);
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.id = "gift-" + i;
+      inp.maxLength = 40;
+      inp.value = gifts[i];
+      inp.placeholder = "Apna gift naam likho";
+      inp.setAttribute("aria-label", "Gift " + (i+1) + " ka naam");
+      row.appendChild(dot); row.appendChild(lab); row.appendChild(inp);
+      fieldsWrap.appendChild(row);
+      inputs.push(inp);
+    }
+  }
+  var savedNote = document.getElementById("savedNote");
+  function flashSaved(){
+    savedNote.classList.add("show");
+    setTimeout(function(){ savedNote.classList.remove("show"); }, 3500);
+  }
+  document.getElementById("applyBtn").addEventListener("click", function(){
+    for(var i=0;i<SEG;i++){
+      var v = inputs[i].value.trim();
+      gifts[i] = v ? v : gifts[i];
+      inputs[i].value = gifts[i];
+    }
+    saveGifts();
+    buildWheel();
+    flashSaved();
+  });
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    gifts = DEFAULTS.slice();
+    saveGifts();
+    buildFields();
+    buildWheel();
+    flashSaved();
+  });
+
+  /* ---- PIN lock for Owner Settings ---- */
+  var panel = document.getElementById("settingsPanel");
+  var pinGate = document.getElementById("pinGate");
+  var setupView = document.getElementById("pinSetupView");
+  var entryView = document.getElementById("pinEntryView");
+  var setupPin1 = document.getElementById("setupPin1");
+  var setupPin2 = document.getElementById("setupPin2");
+  var setupError = document.getElementById("setupError");
+  var entryPin = document.getElementById("entryPin");
+  var entryError = document.getElementById("entryError");
+  var unlocked = false;
+
+  function showError(el, msg){
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+  function hideError(el){ el.textContent = ""; el.classList.remove("show"); }
+  function closeAll(){
+    panel.classList.remove("open");
+    pinGate.classList.remove("open");
+    setupView.classList.remove("show");
+    entryView.classList.remove("show");
+    unlocked = false;
+    setupPin1.value = ""; setupPin2.value = ""; entryPin.value = "";
+    hideError(setupError); hideError(entryError);
+    var cp = document.getElementById("curPin"), np = document.getElementById("newPin"), np2 = document.getElementById("newPin2");
+    if(cp) cp.value = ""; if(np) np.value = ""; if(np2) np2.value = "";
+    hideError(document.getElementById("changeError"));
+    document.getElementById("changeOk").classList.remove("show");
+  }
+  function openSettings(){
+    pinGate.classList.remove("open");
+    setupView.classList.remove("show");
+    entryView.classList.remove("show");
+    buildFields();
+    panel.classList.add("open");
+    unlocked = true;
+    panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }
+  function openGate(){
+    panel.classList.remove("open");
+    unlocked = false;
+    hideError(setupError); hideError(entryError);
+    setupPin1.value = ""; setupPin2.value = ""; entryPin.value = "";
+    if(getPin()){
+      setupView.classList.remove("show");
+      entryView.classList.add("show");
+    } else {
+      entryView.classList.remove("show");
+      setupView.classList.add("show");
+    }
+    pinGate.classList.add("open");
+    pinGate.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    setTimeout(function(){
+      if(getPin()) entryPin.focus(); else setupPin1.focus();
+    }, 80);
+  }
+  var closeBtns = document.querySelectorAll("[data-close-owner]");
+  for(var ci=0; ci<closeBtns.length; ci++){
+    closeBtns[ci].addEventListener("click", closeAll);
+  }
+
+  /* Hidden owner access: "MOBILE WORLD" naam par lagatar 5 tap = PIN khana.
+     Beech me 2 second se zyada rukne par ginati phir se shuru ho jati hai. */
+  var brandTap = document.getElementById("brandTap");
+  var tapCount = 0;
+  var lastTapAt = 0;
+  brandTap.addEventListener("click", function(){
+    var now = Date.now();
+    if(now - lastTapAt > 2000) tapCount = 0;
+    lastTapAt = now;
+    tapCount++;
+    if(tapCount >= 5){
+      tapCount = 0;
+      if(panel.classList.contains("open") || pinGate.classList.contains("open")){
+        closeAll();
+      } else {
+        openGate();
+      }
+    }
+  });
+  setupView.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var p1 = setupPin1.value.trim(), p2 = setupPin2.value.trim();
+    if(!/^\d{4}$/.test(p1)){ showError(setupError, "PIN pure 4 digit ka hona chahiye (jaise 1234)."); return; }
+    if(p1 !== p2){ showError(setupError, "Dono PIN ek jaise nahi hain — dobara dhyaan se daalo."); return; }
+    hideError(setupError);
+    lsSet(LS_PIN, p1);
+    openSettings();
+  });
+  entryView.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var p = entryPin.value.trim();
+    if(p === getPin()){
+      hideError(entryError);
+      entryPin.value = "";
+      openSettings();
+    } else {
+      showError(entryError, "Galat PIN hai — sahi 4-digit PIN daalo.");
+      entryPin.value = "";
+      entryPin.focus();
+    }
+  });
+
+  /* ---- Change PIN (inside unlocked settings) ---- */
+  var changeForm = document.getElementById("changePinForm");
+  var changeError = document.getElementById("changeError");
+  var changeOk = document.getElementById("changeOk");
+  changeForm.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if(!unlocked){ closeAll(); return; }
+    var cur = document.getElementById("curPin").value.trim();
+    var np = document.getElementById("newPin").value.trim();
+    var np2 = document.getElementById("newPin2").value.trim();
+    changeOk.classList.remove("show");
+    if(cur !== getPin()){ showError(changeError, "Abhi wala PIN galat hai."); return; }
+    if(!/^\d{4}$/.test(np)){ showError(changeError, "Naya PIN pure 4 digit ka hona chahiye."); return; }
+    if(np !== np2){ showError(changeError, "Naya PIN dono jagah ek jaisa daalo."); return; }
+    hideError(changeError);
+    lsSet(LS_PIN, np);
+    document.getElementById("curPin").value = "";
+    document.getElementById("newPin").value = "";
+    document.getElementById("newPin2").value = "";
+    changeOk.classList.add("show");
+    setTimeout(function(){ changeOk.classList.remove("show"); }, 4000);
+  });
+
+  /* ---- Init ---- */
+  buildFields();
+  buildWheel();
+  /* Labels need the real wheel size — rebuild once layout settles */
+  setTimeout(buildWheel, 60);
+})();
+</script>
+</body>
+</html>
