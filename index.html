@@ -291,6 +291,7 @@
       <button class="apply-btn" id="applyBtn" type="button">✅ Save Karo — Wheel Update Karo</button>
       <button class="reset-btn" id="resetBtn" type="button">Default Naam Wapas</button>
     </div>
+    <button class="reset-btn" id="unlockSpinBtn" type="button" style="width:100%;margin-top:10px">🔄 Is phone ka 24 ghante wala lock hatao</button>
     <p class="saved-note" id="savedNote">✔ Ho gaya! Naye gifts sab customers ke phone par lag gaye.</p>
 
     <form class="change-pin" id="changePinForm" autocomplete="off">
@@ -484,8 +485,35 @@
   }
 
   /* ---- Spin ---- */
+  var LS_LAST = "mw_wheel_last_spin_v1";
+  var LOCK_MS = 24*60*60*1000;
+  var SPIN_LABEL = spinBtn.innerHTML;
+  function lastSpin(){ try { return JSON.parse(lsGet(LS_LAST) || "null"); } catch(e){ return null; } }
+  function lockLeft(){ var l = lastSpin(); if(!l || !l.t) return 0; var r = l.t + LOCK_MS - Date.now(); return r > 0 ? r : 0; }
+  function updateLock(){
+    var left = lockLeft();
+    if(spinning) return;
+    if(left > 0){
+      var h = Math.floor(left/3600000), m = Math.ceil((left%3600000)/60000);
+      if(m === 60){ h++; m = 0; }
+      spinBtn.innerHTML = "⏳ Agla spin " + h + " ghante " + m + " min baad";
+      spinBtn.disabled = true; hubBtn.disabled = true;
+      var l = lastSpin();
+      if(l && l.p && !resultBox.classList.contains("show")){
+        resultKicker.textContent = "✅ Aap aaj spin kar chuke ho";
+        resultPrize.textContent = l.p;
+        resultSub.textContent = "Ek phone se 24 ghante me ek hi spin. Apna result counter par dikha do. Dhanyavaad!";
+        resultBox.classList.add("show");
+      }
+    } else {
+      spinBtn.innerHTML = SPIN_LABEL;
+      spinBtn.disabled = false; hubBtn.disabled = false;
+    }
+  }
+  setInterval(updateLock, 30000);
   function spin(){
     if(spinning) return;
+    if(lockLeft() > 0){ updateLock(); return; }
     spinning = true;
     spinBtn.disabled = true;
     hubBtn.disabled = true;
@@ -496,6 +524,7 @@
     var target = currentTurn + 360*5 - idx*SEG_ANGLE + jitter;
     if(target <= rotation + 360*4) target += 360;
     rotation = target;
+    lsSet(LS_LAST, JSON.stringify({ t: Date.now(), p: "" }));
     wheel.style.transform = "rotate(" + rotation + "deg)";
     setTimeout(function(){
       spinning = false;
@@ -508,7 +537,9 @@
       resultSub.textContent = noPrize
         ? "Koi baat nahi! Agli baar pakka jeetoge. Mobile World me aane ke liye dhanyavaad!"
         : "Apna gift counter par ye result dikha kar le lo. Dhanyavaad, Mobile World me aane ke liye!";
+      lsSet(LS_LAST, JSON.stringify({ t: (lastSpin()||{}).t || Date.now(), p: prize }));
       resultBox.classList.add("show");
+      updateLock();
       if(!noPrize) confetti();
       resultBox.scrollIntoView({ behavior:"smooth", block:"nearest" });
     }, 5450);
@@ -694,7 +725,16 @@
     setTimeout(function(){ changeOk.classList.remove("show"); }, 4000);
   });
 
+  document.getElementById("unlockSpinBtn").addEventListener("click", function(){
+    if(!unlocked) return;
+    try { window.localStorage.removeItem(LS_LAST); } catch(e){}
+    resultBox.classList.remove("show");
+    updateLock();
+    alert("Is phone ka lock hat gaya, ab dobara spin ho sakta hai.");
+  });
+
   /* ---- Init ---- */
+  updateLock();
   buildFields();
   buildWheel();
   /* Labels need the real wheel size — rebuild once layout settles */
