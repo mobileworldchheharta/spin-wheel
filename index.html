@@ -291,7 +291,7 @@
       <button class="apply-btn" id="applyBtn" type="button">✅ Save Karo — Wheel Update Karo</button>
       <button class="reset-btn" id="resetBtn" type="button">Default Naam Wapas</button>
     </div>
-    <p class="saved-note" id="savedNote">✔ Ho gaya! Naye naam wheel par lag gaye aur is phone me save ho gaye hain.</p>
+    <p class="saved-note" id="savedNote">✔ Ho gaya! Naye gifts sab customers ke phone par lag gaye.</p>
 
     <form class="change-pin" id="changePinForm" autocomplete="off">
       <h3>🔑 PIN Badlo</h3>
@@ -372,6 +372,34 @@
   var resultKicker = document.getElementById("resultKicker");
   var resultSub = document.getElementById("resultSub");
   var spinning = false;
+  var API_URL = "https://script.google.com/macros/s/AKfycbz8kTjZaVt1dd9IYIQBJWxBmBJUZqx1LdFezs8FdsB_V6Y9AyJ2UeYI2HdVvfeA_dy3/exec";
+  function apiPost(body, cb){
+    try {
+      fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+        .then(function(r){ return r.json(); }).then(cb)
+        .catch(function(){ cb({ ok: false, error: "Net/server problem" }); });
+    } catch(e){ cb({ ok: false, error: "Net/server problem" }); }
+  }
+  function applyRemote(arr){
+    if(!arr || arr.length !== SEG || spinning) return;
+    gifts = arr.slice(); saveGifts();
+    try { buildWheel(); } catch(e){}
+    try { buildFields(); } catch(e){}
+  }
+  function loadRemote(){
+    try {
+      fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" }).then(function(r){ return r.json(); })
+        .then(function(j){ if(j && j.ok) applyRemote(j.gifts); }).catch(function(){});
+    } catch(e){}
+  }
+  function pushGifts(){
+    savedNote.textContent = "Save ho raha hai...";
+    savedNote.classList.add("show");
+    apiPost({ action: "save", pin: getPin() || "", gifts: gifts }, function(r){
+      savedNote.textContent = (r && r.ok) ? "✔ Ho gaya! Naye gifts sab customers ke phone par lag gaye." : "✖ Save nahi hua: " + ((r && r.error) || "dobara try karo");
+      flashSaved();
+    });
+  }
   var rotation = 0;
 
   /* ---- LED bulbs around the ring (like the reference photo) ---- */
@@ -528,14 +556,14 @@
     }
     saveGifts();
     buildWheel();
-    flashSaved();
+    pushGifts();
   });
   document.getElementById("resetBtn").addEventListener("click", function(){
     gifts = DEFAULTS.slice();
     saveGifts();
     buildFields();
     buildWheel();
-    flashSaved();
+    pushGifts();
   });
 
   /* ---- PIN lock for Owner Settings ---- */
@@ -657,6 +685,7 @@
     if(!/^\d{4}$/.test(np)){ showError(changeError, "Naya PIN pure 4 digit ka hona chahiye."); return; }
     if(np !== np2){ showError(changeError, "Naya PIN dono jagah ek jaisa daalo."); return; }
     hideError(changeError);
+    if(cur !== np) apiPost({ action: "pin", pin: cur, newPin: np }, function(){});
     lsSet(LS_PIN, np);
     document.getElementById("curPin").value = "";
     document.getElementById("newPin").value = "";
@@ -670,6 +699,7 @@
   buildWheel();
   /* Labels need the real wheel size — rebuild once layout settles */
   setTimeout(buildWheel, 60);
+  loadRemote();
 })();
 </script>
 </body>
