@@ -206,6 +206,7 @@
   }
 
   .confetti{position:fixed;top:-16px;z-index:50;pointer-events:none;border-radius:2px}
+  #pinGate, #settingsPanel { display: none !important; }
 </style>
 </head>
 <body>
@@ -664,20 +665,7 @@
   var brandTap = document.getElementById("brandTap");
   var tapCount = 0;
   var lastTapAt = 0;
-  brandTap.addEventListener("click", function(){
-    var now = Date.now();
-    if(now - lastTapAt > 2000) tapCount = 0;
-    lastTapAt = now;
-    tapCount++;
-    if(tapCount >= 5){
-      tapCount = 0;
-      if(panel.classList.contains("open") || pinGate.classList.contains("open")){
-        closeAll();
-      } else {
-        openGate();
-      }
-    }
-  });
+  /* Owner settings ab sirf MW Owner app me hain (customer page se hata diya). */
   setupView.addEventListener("submit", function(ev){
     ev.preventDefault();
     var p1 = setupPin1.value.trim(), p2 = setupPin2.value.trim();
